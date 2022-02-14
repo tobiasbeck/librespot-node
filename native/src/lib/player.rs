@@ -7,6 +7,7 @@ use std::sync::{ Mutex, Arc };
 use std::sync::mpsc;
 
 use librespot::core::authentication::Credentials;
+use librespot::protocol::authentication::AuthenticationType;
 use librespot::core::config::{DeviceType, SessionConfig, ConnectConfig, VolumeCtrl};
 use librespot::core::session::Session;
 
@@ -94,11 +95,16 @@ impl Clone for EmittedSink {
 }
 
 impl SpotifyPlayer {
-    pub fn new(username: String, password: String, quality: Bitrate, cache_dir: String) -> SpotifyPlayer {
+    pub fn new(username: String, password: impl Into<String>, quality: Bitrate, cache_dir: String) -> SpotifyPlayer {
         let (session_tx, session_rx) = oneshot::channel();
         let (remote_tx, remote_rx) = oneshot::channel();
 
-        let credentials = Credentials::with_password(username, password);
+        // let credentials = Credentials::with_password(username, password);
+        let credentials = Credentials {
+          username: username,
+          auth_type: AuthenticationType::AUTHENTICATION_SPOTIFY_TOKEN,
+          auth_data: password.into().into_bytes()
+        };
 
         let cache_config = Cache::new(PathBuf::from(cache_dir), true);
 
