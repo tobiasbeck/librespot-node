@@ -66,8 +66,8 @@ type TNativeSpotifyEvent = IAudioDataEvent | IStartedEvent | IStoppedEvent | ICh
 
 export class Spotify {
   constructor(options: ISpotifyOptions)
-  play(trackId: string)
-  enableConnect(options: ISpotifyConnectOptions)
-  disableConnect()
-  poll(callback: (error: Error | null, event: TNativeSpotifyEvent | null) => void)
+  play(trackId: string): any;
+  enableConnect(options: ISpotifyConnectOptions): any;
+  disableConnect(): any;
+  poll(callback: (error: Error | null, event: TNativeSpotifyEvent | null) => void): any;
 }
