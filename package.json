@@ -2,16 +2,18 @@
   "name": "librespot-node",
   "version": "0.1.0",
   "description": "",
-  "main": "lib/index.js",
-  "author": "Nadav Tau <nadavt@gmail.com>",
-  "license": "MIT",
-  "dependencies": {
-    "@types/node": "^14.11.10",
-    "neon-cli": "^0.2.0"
-  },
+  "main": "index.node",
   "scripts": {
-    "watch": "tsc --watch",
-    "build": "tsc",
-    "install": "neon build"
+    "build": "cargo-cp-artifact -nc index.node -- cargo build --message-format=json-render-diagnostics",
+    "build-debug": "npm run build --",
+    "build-release": "npm run build -- --release",
+    "install": "neon build --release",
+    "test": "cargo test"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "cargo-cp-artifact": "^0.1",
+    "neon-cli": "0.9.1"
   }
 }

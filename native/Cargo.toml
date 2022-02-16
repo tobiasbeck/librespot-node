@@ -1,24 +1,21 @@
 [package]
 name = "librespot-node"
 version = "0.1.0"
-authors = ["Nadav Tau <nadavt@gmail.com>"]
-license = "MIT"
-build = "build.rs"
-exclude = ["artifacts.json", "index.node"]
+license = "ISC"
 edition = "2018"
+exclude = ["index.node"]
 
 [lib]
 name = "librespot_node"
-crate-type = ["dylib"]
+crate-type = ["cdylib"]
 
-[build-dependencies]
-neon-build = "0.2.0"
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-neon = "0.9.1"
-tokio-core = "0.1"
-log = { version = "^0.4.5", features = ["std"] }
-simple-logging = "2.0.1"
-futures = "0.1.17"
 librespot = "0.3.1"
-hex-slice = "0.1.4"
+tokio = "1.16.1"
+
+[dependencies.neon]
+version = "0.9"
+default-features = false
+features = ["napi-6"]

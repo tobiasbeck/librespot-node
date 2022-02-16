@@ -1,5 +1,6 @@
 native/target
 native/index.node
+native/target
 native/artifacts.json
 **/*~
 **/node_modules
