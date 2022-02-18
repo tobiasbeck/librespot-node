@@ -1647,6 +1647,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "sha1"
+version = "0.10.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c77f4e7f65455545c2153c1253d25056825e77ee2533f0e41deb65a93a34852f"
+dependencies = [
+ "cfg-if",
+ "cpufeatures",
+ "digest 0.10.3",
+]
+
+[[package]]
 name = "shannon"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1766,7 +1777,10 @@ dependencies = [
 name = "test_play"
 version = "0.1.0"
 dependencies = [
+ "futures",
+ "hex",
  "librespot",
+ "sha1",
  "tokio",
 ]
 
