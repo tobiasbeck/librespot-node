@@ -12,7 +12,7 @@
   },
   "author": "",
   "license": "ISC",
-  "devDependencies": {
+  "dependencies": {
     "cargo-cp-artifact": "^0.1",
     "neon-cli": "0.9.1"
   }
