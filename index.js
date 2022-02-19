@@ -1,5 +1,5 @@
 
-const { newPlayer, connectOauth, play, discoveryEnable, newDiscovery, playerReplaceEventListener } = require('./native');
+const { newPlayer, connectOauth, play, stop, pause, discoveryEnable, newDiscovery, playerReplaceEventListener } = require('./native');
 const { EventEmitter } = require('events');
 
 class Player extends EventEmitter {
@@ -41,11 +41,11 @@ class Player extends EventEmitter {
   }
 
     async pause() {
-    this.native.pause()
+    pause(this.native)
   }
 
     async stop() {
-      this.native.stop();
+     stop(this.native);
   }
 
     async seek(positionMs) {
