@@ -41,11 +41,27 @@ class Player extends EventEmitter {
   }
 
     async pause() {
-    pause(this.native)
+      return new Promise((resolve, reject) => {
+        pause(this.native, (err, success) => {
+          if (err !== undefined) {
+            reject(err);
+            return; 
+          }
+          resolve(success);
+        })
+      })
   }
 
     async stop() {
-     stop(this.native);
+      return new Promise((resolve, reject) => {
+        stop(this.native, (err, success) => {
+          if (err !== undefined) {
+            reject(err);
+            return; 
+          }
+          resolve(success);
+        })
+      })
   }
 
     async seek(positionMs) {
