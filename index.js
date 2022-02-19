@@ -108,4 +108,4 @@ class Discover extends EventEmitter {
 }
 
 
-module.exports = { Spotify: Player, Discover }
+module.exports = { Player, Discover }
