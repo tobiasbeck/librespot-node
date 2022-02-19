@@ -1,5 +1,6 @@
-export class Spotify {
-  connect(username: string, oauth: string);
+export class Player {
+  connectOauth(username: string, oauth: string): Promise<void>;
   play(track: string);
-  enableDiscovery(name: string, deviceType?: string);
+  pause(): Promise<void>;
+  stop(): Promise<void>;
 }
