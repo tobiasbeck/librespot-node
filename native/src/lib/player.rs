@@ -1,4 +1,6 @@
 use super::events::NodeEventEmitter;
+use futures::future;
+use futures::stream::{Stream, StreamExt};
 use librespot::connect::spirc::Spirc;
 use librespot::core::authentication::Credentials;
 use librespot::core::config::{ConnectConfig, SessionConfig};
@@ -8,7 +10,7 @@ use librespot::discovery::DeviceType;
 use librespot::playback::audio_backend;
 use librespot::playback::config::{AudioFormat, PlayerConfig};
 use librespot::playback::mixer::{find, MixerConfig};
-use librespot::playback::player::Player;
+use librespot::playback::player::{Player, PlayerEvent};
 use librespot::protocol::authentication::AuthenticationType;
 use neon::context::{Context, TaskContext};
 use neon::event::Channel;
@@ -19,8 +21,10 @@ use std::fmt;
 use std::str::FromStr;
 use std::sync::Arc;
 use std::sync::Mutex;
+use std::thread;
 use tokio::runtime::Handle;
 use tokio::sync::Mutex as SyncMutex;
+use tokio_stream::wrappers::UnboundedReceiverStream;
 
 #[derive(Debug, Clone)]
 pub struct NotReadyError;
@@ -98,11 +102,51 @@ impl SpotifyPlayer {
 
     let backend = audio_backend::find(None).unwrap();
 
-    let (mut player, _) = Player::new(player_config, session, None, move || {
+    let (mut player, rx) = Player::new(player_config, session, None, move || {
       backend(None, audio_format)
     });
 
     self.player = Some(Arc::new(SyncMutex::new(player)));
+    let handle = Handle::current();
+    let emits = Arc::clone(&self.emits);
+    let client_rcv = UnboundedReceiverStream::new(rx); // <-- this
+    handle.spawn(async move {
+      client_rcv
+        .for_each(move |res| {
+          // debug!("PlayerEvent: {:?}", res);
+
+          // let mut state = local_state.lock().unwrap();
+          // println!("EVENT: STOPPED");
+          match res {
+            PlayerEvent::Started { .. } => {
+              // println!("EVENT: STARTED");
+              emits.send_event(String::from("track_started"), |cx| {
+                return cx.lock().unwrap().undefined().upcast::<JsValue>();
+              });
+            }
+            PlayerEvent::Changed { .. } => {
+              // println!("EVENT: CHANGED");
+              emits.send_event(String::from("track_changed"), |cx| {
+                return cx.lock().unwrap().undefined().upcast::<JsValue>();
+              });
+            }
+            PlayerEvent::EndOfTrack { .. } => {
+              // println!("EVENT: STOPPED");
+              emits.send_event(String::from("track_finished"), |cx| {
+                return cx.lock().unwrap().undefined().upcast::<JsValue>();
+              });
+            }
+            PlayerEvent::Stopped { .. } => {
+              emits.send_event(String::from("track_stopped"), |cx| {
+                return cx.lock().unwrap().undefined().upcast::<JsValue>();
+              });
+            }
+            _ => println!("Ain't special"),
+          }
+          future::ready(())
+        })
+        .await;
+    });
     // return self;
     Ok(true)
   }
@@ -126,7 +170,7 @@ impl SpotifyPlayer {
 
     let backend = audio_backend::find(None).unwrap();
 
-    let (mut player, _) = Player::new(player_config, session.clone(), None, move || {
+    let (mut player, rx) = Player::new(player_config, session.clone(), None, move || {
       backend(None, audio_format)
     });
 
@@ -143,6 +187,39 @@ impl SpotifyPlayer {
     // spirc_task_.await;
 
     self.player = Some(Arc::new(SyncMutex::new(player)));
+    let handle = Handle::current();
+    let emits = Arc::clone(&self.emits);
+    let client_rcv = UnboundedReceiverStream::new(rx); // <-- this
+    handle.spawn(async move {
+      client_rcv
+        .for_each(move |res| {
+          // debug!("PlayerEvent: {:?}", res);
+
+          // let mut state = local_state.lock().unwrap();
+          println!("EVENT: STOPPED");
+          match res {
+            PlayerEvent::Started { .. } => {
+              emits.send_event(String::from("track_started"), |cx| {
+                return cx.lock().unwrap().undefined().upcast::<JsValue>();
+              });
+            }
+            PlayerEvent::Changed { .. } => {
+              emits.send_event(String::from("track_changed"), |cx| {
+                return cx.lock().unwrap().undefined().upcast::<JsValue>();
+              });
+            }
+            PlayerEvent::Stopped { .. } | PlayerEvent::EndOfTrack { .. } => {
+              println!("EVENT: STOPPED");
+              emits.send_event(String::from("track_finished"), |cx| {
+                return cx.lock().unwrap().undefined().upcast::<JsValue>();
+              });
+            }
+            _ => println!("Ain't special"),
+          }
+          future::ready(())
+        })
+        .await;
+    });
     // return self;
     Ok(true)
   }
@@ -153,8 +230,7 @@ impl SpotifyPlayer {
     if let Some(s2) = &self.player {
       s2.lock().await.load(id, true, 0);
       // if (waitForEnd) {
-      // } else {
-      self.wait_for_song_end();
+      // s2.await_end_of_track().await;
       // }
       // s2.await_end_of_track().await;
       Ok(0)
@@ -180,21 +256,6 @@ impl SpotifyPlayer {
       Ok(0)
     } else {
       Err(NotReadyError)
-    }
-  }
-
-  fn wait_for_song_end(&self) {
-    let handle = Handle::current();
-    if let Some(s2) = &self.player {
-      let p = Arc::clone(s2);
-      let emits = Arc::clone(&self.emits);
-      handle.spawn(async move {
-        p.lock().await.await_end_of_track().await;
-        emits.send_event(String::from("track_finished"), move |cx| {
-          return cx.lock().unwrap().undefined().upcast::<JsValue>();
-        });
-      });
-      // s2.await_end_of_track().await;
     }
   }
 }

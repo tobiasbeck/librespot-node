@@ -14,45 +14,45 @@ use std::str::FromStr;
 
 #[tokio::main]
 async fn main() {
-  let name = String::from("Me");
-  let deviceType = DeviceType::from_str("speaker").unwrap();
-  let builder = Builder::new(hex::encode(Sha1::digest(name.as_bytes())));
-  let builder = builder.name(name);
-  let builder = builder.device_type(deviceType);
-  let mut discover = builder.launch().unwrap();
+  // let name = String::from("Me");
+  // let deviceType = DeviceType::from_str("speaker").unwrap();
+  // let builder = Builder::new(hex::encode(Sha1::digest(name.as_bytes())));
+  // let builder = builder.name(name);
+  // let builder = builder.device_type(deviceType);
+  // let mut discover = builder.launch().unwrap();
 
-  while let Some(x) = discover.next().await {
-    println!("Received {:?}", x);
-  }
-  // let session_config = SessionConfig::default();
-  // let player_config = PlayerConfig::default();
-  // let audio_format = AudioFormat::default();
-
-  // let args: Vec<_> = env::args().collect();
-  // if args.len() != 4 {
-  //     eprintln!("Usage: {} USERNAME PASSWORD TRACK", args[0]);
-  //     return;
+  // while let Some(x) = discover.next().await {
+  //   println!("Received {:?}", x);
   // }
-  // let credentials = Credentials::with_password(&args[1], &args[2]);
+  let session_config = SessionConfig::default();
+  let player_config = PlayerConfig::default();
+  let audio_format = AudioFormat::default();
 
-  // let track = SpotifyId::from_uri(&String::from("spotify:track:4eEDECI99JmE2w7H2VLUag")).unwrap();
+  let args: Vec<_> = env::args().collect();
+  if args.len() != 4 {
+    eprintln!("Usage: {} USERNAME PASSWORD TRACK", args[0]);
+    return;
+  }
+  let credentials = Credentials::with_password(&args[1], &args[2]);
 
-  // let backend = audio_backend::find(None).unwrap();
+  let track = SpotifyId::from_uri(&String::from("spotify:track:4eEDECI99JmE2w7H2VLUag")).unwrap();
 
-  // println!("Connecting ..");
-  // let session = Session::connect(session_config, credentials, None)
-  //     .await
-  //     .unwrap();
+  let backend = audio_backend::find(None).unwrap();
 
-  // let (mut player, _) = Player::new(player_config, session, None, move || {
-  //     backend(None, audio_format)
-  // });
-  // //println!("TRACK: {}", track.to_string())
-  // player.load(track, true, 0);
+  println!("Connecting ..");
+  let session = Session::connect(session_config, credentials, None)
+    .await
+    .unwrap();
 
-  // println!("Playing...");
+  let (mut player, _) = Player::new(player_config, session, None, move || {
+    backend(None, audio_format)
+  });
+  //println!("TRACK: {}", track.to_string())
+  player.load(track, true, 0);
 
-  // player.await_end_of_track().await;
+  println!("Playing...");
 
-  // println!("Done");
+  player.stop();
+
+  println!("Done");
 }

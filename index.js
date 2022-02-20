@@ -11,7 +11,7 @@ class Player extends EventEmitter {
   }
 
   listenEvent(event) {
-    // console.log('TRIGGERED', this, event);
+    // console.log('TRIGGERED', event);
     this.emit(event, true);
   }
 
